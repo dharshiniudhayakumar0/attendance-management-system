@@ -48,7 +48,7 @@ export default function AttendanceHistoryModal({ employeeId, onClose }) {
           ) : data ? (
             <div className="space-y-6">
               {/* Summary Stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div className="bg-slate-950/50 border border-slate-800 p-3 rounded-xl text-center">
                   <div className="text-[10px] text-slate-500 uppercase font-bold">Total</div>
                   <div className="text-xl text-white font-extrabold">{data.summary.total}</div>
@@ -68,10 +68,6 @@ export default function AttendanceHistoryModal({ employeeId, onClose }) {
                 <div className="bg-slate-950/50 border border-slate-800 p-3 rounded-xl text-center">
                   <div className="text-[10px] text-red-500 uppercase font-bold">Absent</div>
                   <div className="text-xl text-red-400 font-extrabold">{data.summary.absent}</div>
-                </div>
-                <div className="bg-gradient-to-tr from-indigo-900/50 to-violet-900/30 border border-indigo-500/30 p-3 rounded-xl text-center">
-                  <div className="text-[10px] text-indigo-300 uppercase font-bold">Att. %</div>
-                  <div className="text-xl text-indigo-400 font-extrabold">{data.summary.attendance_percentage}%</div>
                 </div>
               </div>
 

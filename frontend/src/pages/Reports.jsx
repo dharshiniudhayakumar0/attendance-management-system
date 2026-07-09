@@ -3,13 +3,6 @@ import Layout from "../components/Layout";
 import { getDepartments } from "../services/employeeService";
 import { getAttendanceEmployeeSummary } from "../services/attendanceService";
 
-// ─── Percentage colour helper ──────────────────────────────────────────────────
-const pctColor = (pct) => {
-  if (pct >= 90) return { bar: "bg-emerald-500", text: "text-emerald-400", badge: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" };
-  if (pct >= 75) return { bar: "bg-amber-500",   text: "text-amber-400",   badge: "bg-amber-500/10   border-amber-500/20   text-amber-400"   };
-  if (pct >= 50) return { bar: "bg-orange-500",  text: "text-orange-400",  badge: "bg-orange-500/10  border-orange-500/20  text-orange-400"  };
-  return           { bar: "bg-red-500",    text: "text-red-400",    badge: "bg-red-500/10    border-red-500/20    text-red-400"    };
-};
 
 // ─── Sort Icon ─────────────────────────────────────────────────────────────────
 const SortIcon = ({ field, sortField, sortDir }) => {
@@ -85,36 +78,6 @@ export default function Reports() {
   const startIdx   = (currentPage - 1) * pageSize;
   const paginated  = sorted.slice(startIdx, startIdx + pageSize);
 
-  // ── CSV Export ─────────────────────────────────────────────────────────────
-  const exportCSV = () => {
-    if (sorted.length === 0) { triggerError("No records to export."); return; }
-    const headers = [
-      "Employee ID", "Name", "Department", "Designation", "Status",
-      "Total Records", "Present", "Late", "Half Day", "Absent", "On Leave"
-    ];
-    const rows = sorted.map((e) => [
-      e.employee_id,
-      `"${e.employee_name}"`,
-      `"${e.department}"`,
-      `"${e.designation}"`,
-      e.status,
-      e.total_records,
-      e.present,
-      e.late,
-      e.half_day,
-      e.absent,
-      e.on_leave,
-    ]);
-    const csv = "data:text/csv;charset=utf-8," +
-      [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csv));
-    link.setAttribute("download", `attendance_report_${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    triggerSuccess("Report exported!");
-  };
 
   return (
     <Layout>
@@ -128,16 +91,7 @@ export default function Reports() {
               Per-employee attendance summaries.
             </p>
           </div>
-          <button
-            onClick={exportCSV}
-            id="btn-export-report-csv"
-            className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl px-4 py-3 text-sm font-semibold transition-all border border-slate-700/50 active:scale-[0.98]"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export CSV
-          </button>
+
         </div>
 
         {/* ── Toast ──────────────────────────────────────────────────────── */}
@@ -278,19 +232,7 @@ export default function Reports() {
                         <td className="px-5 py-4 text-center font-bold text-orange-400 text-xs">{emp.half_day}</td>
                         <td className="px-5 py-4 text-center font-bold text-red-400    text-xs">{emp.absent}</td>
                         <td className="px-5 py-4 text-center font-bold text-indigo-300 text-xs">{emp.on_leave}</td>
-                        <td className="px-5 py-4 min-w-[160px]">
-                          <div className="flex items-center gap-3">
-                            <div className="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                              <div
-                                className={`h-1.5 rounded-full transition-all duration-700 ${c.bar}`}
-                                style={{ width: `${Math.min(emp.attendance_percentage, 100)}%` }}
-                              />
-                            </div>
-                            <span className={`text-xs font-extrabold min-w-[42px] text-right ${c.text}`}>
-                              {emp.attendance_percentage}%
-                            </span>
-                          </div>
-                        </td>
+
                       </tr>
                     );
                   })}
@@ -338,21 +280,7 @@ export default function Reports() {
           )}
         </div>
 
-        {/* ── Legend ──────────────────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
-          <span className="font-bold uppercase tracking-wider">Attendance legend:</span>
-          {[
-            { label: "Excellent (≥90%)", color: "bg-emerald-500" },
-            { label: "Good (75–89%)",    color: "bg-amber-500"   },
-            { label: "Fair (50–74%)",    color: "bg-orange-500"  },
-            { label: "At Risk (<50%)",   color: "bg-red-500"     },
-          ].map((l) => (
-            <div key={l.label} className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${l.color}`} />
-              <span>{l.label}</span>
-            </div>
-          ))}
-        </div>
+
       </div>
     </Layout>
   );

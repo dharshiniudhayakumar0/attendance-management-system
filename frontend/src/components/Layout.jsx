@@ -33,7 +33,7 @@ export default function Layout({ children }) {
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex md:w-64 bg-slate-900 border-r border-slate-800 flex-col shrink-0">
         {/* Brand */}
-        <div className="h-16 px-6 flex items-center gap-3 border-b border-slate-800/80">
+        <div className="h-16 px-6 flex items-center gap-3 border-b border-slate-800/80 mb-6">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white font-bold shadow-md shadow-indigo-500/20">
             A
           </div>
@@ -42,19 +42,8 @@ export default function Layout({ children }) {
           </span>
         </div>
 
-        {/* User Card */}
-        <div className="p-4 mx-4 my-6 bg-slate-950/40 border border-slate-800/55 rounded-2xl flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 font-bold uppercase">
-            {user.username.charAt(0)}
-          </div>
-          <div className="overflow-hidden">
-            <h4 className="text-sm font-semibold truncate text-white">{user.username}</h4>
-            <span className="text-xs text-slate-500 capitalize">{user.role}</span>
-          </div>
-        </div>
-
         {/* Nav Links */}
-        <nav className="flex-1 px-4 space-y-1">
+        <nav className="px-4 space-y-1.5">
           <Link
             to="/dashboard"
             className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
@@ -112,13 +101,26 @@ export default function Layout({ children }) {
           </Link>
         </nav>
 
-        {/* Logout */}
-        <div className="p-4 border-t border-slate-800/80">
+        {/* Spacer to push everything else down */}
+        <div className="flex-1" />
+
+        {/* User profile & Logout at the bottom */}
+        <div className="p-4 border-t border-slate-800/80 bg-slate-950/20 space-y-3">
+          <div className="p-3 bg-slate-950/40 border border-slate-805/50 rounded-2xl flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-350 font-extrabold uppercase shrink-0">
+              {user.username.charAt(0)}
+            </div>
+            <div className="overflow-hidden">
+              <h4 className="text-sm font-bold truncate text-white">{user.username}</h4>
+              <span className="text-[10px] text-slate-500 capitalize">{user.role}</span>
+            </div>
+          </div>
+
           <button
             onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-slate-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent transition-all"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
             Sign Out

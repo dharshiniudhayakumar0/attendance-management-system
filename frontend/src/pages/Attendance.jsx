@@ -157,6 +157,10 @@ export default function Attendance() {
     if (!formData.employee_id || !formData.attendance_date || !formData.attendance_status) {
       triggerError("Please fill in all required fields."); return;
     }
+    const todayStr = new Date().toISOString().split("T")[0];
+    if (formData.attendance_date > todayStr) {
+      triggerError("Cannot mark attendance for a future date."); return;
+    }
     const payload = { ...formData };
     if (["Absent", "On Leave"].includes(formData.attendance_status)) {
       payload.check_in_time = ""; payload.check_out_time = "";
@@ -303,7 +307,7 @@ export default function Attendance() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
             {/* Search by name */}
             <div className="sm:col-span-2">
               <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Search Employee</label>
@@ -336,25 +340,6 @@ export default function Attendance() {
                 onChange={handleFilterChange}
                 className="w-full bg-slate-950/50 border border-slate-800 text-slate-300 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
               />
-            </div>
-
-            {/* Status */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Status</label>
-              <select
-                name="status"
-                id="att-filter-status"
-                value={filters.status}
-                onChange={handleFilterChange}
-                className="w-full bg-slate-950/50 border border-slate-800 text-slate-300 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-indigo-500 cursor-pointer"
-              >
-                <option value="" className="bg-slate-950">All Statuses</option>
-                <option value="Present" className="bg-slate-950">Present</option>
-                <option value="Absent"  className="bg-slate-950">Absent</option>
-                <option value="Late"    className="bg-slate-950">Late</option>
-                <option value="Half Day" className="bg-slate-950">Half Day</option>
-                <option value="On Leave" className="bg-slate-950">On Leave</option>
-              </select>
             </div>
 
             {/* Clear button */}
@@ -554,6 +539,7 @@ export default function Attendance() {
                   <input
                     type="date" name="attendance_date" value={formData.attendance_date}
                     onChange={handleInputChange} required disabled={currentModal === "edit"}
+                    max={new Date().toISOString().split("T")[0]}
                     className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-50"
                   />
                 </div>

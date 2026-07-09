@@ -34,6 +34,7 @@ def role_required(*roles):
         return decorator
     return wrapper
 
+# ═══════════════════════════════════════════════════════════════════════════
 #  USERS ROUTES
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -43,12 +44,49 @@ def role_required(*roles):
 def get_users():
     """
     Get all users
+    Retrieve a list of all registered users. Admin access only.
     ---
     tags:
       - Users
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     responses:
       200:
-        description: List of all users
+        description: List of all users retrieved successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  username:
+                    type: string
+                    example: john_doe
+                  role:
+                    type: string
+                    example: employee
+                  created_at:
+                    type: string
+                    example: "2025-01-15T10:30:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      403:
+        description: Forbidden — insufficient permissions
+      500:
+        description: Internal server error
     """
     try:
         users = User.query.order_by(User.username).all()
@@ -63,19 +101,55 @@ def get_users():
 def get_user(user_id):
     """
     Get a user by ID
+    Retrieve details of a specific user by their unique ID. Admin access only.
     ---
     tags:
       - Users
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: user_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the user
     responses:
       200:
         description: User found
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                username:
+                  type: string
+                  example: john_doe
+                role:
+                  type: string
+                  example: employee
+                created_at:
+                  type: string
+                  example: "2025-01-15T10:30:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      403:
+        description: Forbidden — insufficient permissions
       404:
         description: User not found
+      500:
+        description: Internal server error
     """
     try:
         user = User.query.get(user_id)
@@ -92,29 +166,77 @@ def get_user(user_id):
 def create_user():
     """
     Create a new user
+    Register a new user account. Admin access only.
     ---
     tags:
       - Users
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - in: body
         name: body
         required: true
+        description: User registration data
         schema:
           type: object
-          required: [username, password]
+          required:
+            - username
+            - password
           properties:
             username:
               type: string
+              description: Unique username
+              example: john_doe
             password:
               type: string
+              description: User password
+              example: securePass123
             role:
               type: string
+              description: User role
               enum: [admin, hr, employee]
+              example: employee
     responses:
       201:
-        description: User created
+        description: User created successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: User created successfully
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 5
+                username:
+                  type: string
+                  example: john_doe
+                role:
+                  type: string
+                  example: employee
+                created_at:
+                  type: string
+                  example: "2025-01-15T10:30:00"
+      400:
+        description: Validation error — missing required fields
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      403:
+        description: Forbidden — insufficient permissions
       409:
         description: Username already exists
+      500:
+        description: Internal server error
     """
     try:
         data = request.get_json()
@@ -152,29 +274,79 @@ def create_user():
 def update_user(user_id):
     """
     Update a user
+    Modify an existing user's details. Admin access only.
     ---
     tags:
       - Users
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - name: user_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the user to update
       - in: body
         name: body
         required: true
+        description: Fields to update
         schema:
           type: object
           properties:
             username:
               type: string
+              description: New username
+              example: john_doe_updated
             password:
               type: string
+              description: New password
+              example: newSecurePass456
             role:
               type: string
+              description: New role
+              enum: [admin, hr, employee]
+              example: hr
     responses:
       200:
-        description: User updated
+        description: User updated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: User updated successfully
+            data:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                username:
+                  type: string
+                  example: john_doe_updated
+                role:
+                  type: string
+                  example: hr
+                created_at:
+                  type: string
+                  example: "2025-01-15T10:30:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      403:
+        description: Forbidden — insufficient permissions
+      404:
+        description: User not found
+      409:
+        description: Username already exists
+      500:
+        description: Internal server error
     """
     try:
         user = User.query.get(user_id)
@@ -212,17 +384,43 @@ def update_user(user_id):
 def delete_user(user_id):
     """
     Delete a user
+    Permanently remove a user account. Admin access only.
     ---
     tags:
       - Users
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: user_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the user to delete
     responses:
       200:
-        description: User deleted
+        description: User deleted successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: User deleted successfully
+            data:
+              type: string
+              example: null
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      403:
+        description: Forbidden — insufficient permissions
+      404:
+        description: User not found
+      500:
+        description: Internal server error
     """
     try:
         user = User.query.get(user_id)
@@ -240,25 +438,72 @@ def delete_user(user_id):
 def login_user():
     """
     Authenticate user (API route version)
+    Alternative login endpoint under /api/users/login.
     ---
     tags:
       - Authentication
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - in: body
         name: body
         required: true
+        description: Login credentials
         schema:
           type: object
+          required:
+            - username
+            - password
           properties:
             username:
               type: string
+              description: Username
+              example: admin
             password:
               type: string
+              description: Password
+              example: admin123
     responses:
       200:
-        description: Login successful
+        description: Login successful — returns JWT tokens and user info
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Login successful
+            data:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                refresh_token:
+                  type: string
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                user:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      example: 1
+                    username:
+                      type: string
+                      example: admin
+                    role:
+                      type: string
+                      example: admin
+      400:
+        description: Missing required fields
       401:
         description: Invalid credentials
+      500:
+        description: Internal server error
     """
     try:
         data = request.get_json()
@@ -289,25 +534,80 @@ def login_user():
 @jwt_required()
 def get_employees():
     """
-    Get all employees (with optional search/filter)
+    Get all employees
+    Retrieve a list of all employees with optional search/filter.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: search
         in: query
         type: string
-        description: Search by name, email, or designation
+        required: false
+        description: Search by employee name, email, or designation
+        example: John
       - name: department
         in: query
         type: string
+        required: false
+        description: Filter by department name
+        example: Engineering
       - name: status
         in: query
         type: string
+        required: false
+        description: Filter by employee status
         enum: [Active, Inactive]
+        example: Active
     responses:
       200:
-        description: List of employees
+        description: List of employees retrieved successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  employee_id:
+                    type: integer
+                    example: 1
+                  employee_name:
+                    type: string
+                    example: John Smith
+                  email:
+                    type: string
+                    example: john.smith@company.com
+                  mobile:
+                    type: string
+                    example: "9876543210"
+                  department:
+                    type: string
+                    example: Engineering
+                  designation:
+                    type: string
+                    example: Software Engineer
+                  status:
+                    type: string
+                    example: Active
+                  created_at:
+                    type: string
+                    example: "2025-01-15T10:30:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
     """
     try:
         search     = request.args.get("search", "").strip()
@@ -333,12 +633,35 @@ def get_employees():
 def get_departments():
     """
     Get unique department names
+    Retrieve a list of all unique department names from the employees table.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     responses:
       200:
-        description: List of department names
+        description: List of unique department names
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: array
+              items:
+                type: string
+              example: ["Engineering", "HR", "Marketing", "Finance"]
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
     """
     try:
         depts = db.session.query(Employee.department).distinct().order_by(Employee.department).all()
@@ -352,19 +675,65 @@ def get_departments():
 def get_employee(employee_id):
     """
     Get a single employee by ID
+    Retrieve detailed information for a specific employee.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: employee_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the employee
     responses:
       200:
         description: Employee found
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: object
+              properties:
+                employee_id:
+                  type: integer
+                  example: 1
+                employee_name:
+                  type: string
+                  example: John Smith
+                email:
+                  type: string
+                  example: john.smith@company.com
+                mobile:
+                  type: string
+                  example: "9876543210"
+                department:
+                  type: string
+                  example: Engineering
+                designation:
+                  type: string
+                  example: Software Engineer
+                status:
+                  type: string
+                  example: Active
+                created_at:
+                  type: string
+                  example: "2025-01-15T10:30:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
       404:
         description: Employee not found
+      500:
+        description: Internal server error
     """
     try:
         employee = Employee.query.get(employee_id)
@@ -379,20 +748,87 @@ def get_employee(employee_id):
 @jwt_required()
 def get_employee_attendance_history(employee_id):
     """
-    Get full attendance history for a specific employee
+    Get employee attendance history
+    Retrieve the full attendance history for a specific employee, including summary statistics.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: employee_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the employee
     responses:
       200:
         description: Attendance history with summary statistics
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: object
+              properties:
+                employee:
+                  type: object
+                  description: Employee details
+                summary:
+                  type: object
+                  properties:
+                    total:
+                      type: integer
+                      example: 30
+                    present:
+                      type: integer
+                      example: 22
+                    late:
+                      type: integer
+                      example: 3
+                    half_day:
+                      type: integer
+                      example: 1
+                    absent:
+                      type: integer
+                      example: 2
+                    on_leave:
+                      type: integer
+                      example: 2
+                records:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      attendance_id:
+                        type: integer
+                      employee_id:
+                        type: integer
+                      attendance_date:
+                        type: string
+                        example: "2025-01-15"
+                      attendance_status:
+                        type: string
+                        example: Present
+                      check_in_time:
+                        type: string
+                        example: "09:00:00"
+                      check_out_time:
+                        type: string
+                        example: "18:00:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
       404:
         description: Employee not found
+      500:
+        description: Internal server error
     """
     try:
         employee = Employee.query.get(employee_id)
@@ -425,35 +861,102 @@ def get_employee_attendance_history(employee_id):
 def create_employee():
     """
     Create a new employee
+    Add a new employee record to the system.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - in: body
         name: body
         required: true
+        description: Employee data
         schema:
           type: object
-          required: [employee_name, email, mobile, department, designation]
+          required:
+            - employee_name
+            - email
+            - mobile
+            - department
+            - designation
           properties:
             employee_name:
               type: string
+              description: Full name of the employee
+              example: John Smith
             email:
               type: string
+              description: Unique email address
+              example: john.smith@company.com
             mobile:
               type: string
+              description: Mobile phone number
+              example: "9876543210"
             department:
               type: string
+              description: Department name
+              example: Engineering
             designation:
               type: string
+              description: Job title / designation
+              example: Software Engineer
             status:
               type: string
+              description: Employee status
               enum: [Active, Inactive]
+              example: Active
     responses:
       201:
-        description: Employee created
+        description: Employee created successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Employee created successfully
+            data:
+              type: object
+              properties:
+                employee_id:
+                  type: integer
+                  example: 10
+                employee_name:
+                  type: string
+                  example: John Smith
+                email:
+                  type: string
+                  example: john.smith@company.com
+                mobile:
+                  type: string
+                  example: "9876543210"
+                department:
+                  type: string
+                  example: Engineering
+                designation:
+                  type: string
+                  example: Software Engineer
+                status:
+                  type: string
+                  example: Active
+                created_at:
+                  type: string
+                  example: "2025-01-15T10:30:00"
+      400:
+        description: Validation error — missing required fields
+      401:
+        description: Unauthorized — missing or invalid JWT token
       409:
         description: Email already exists
+      500:
+        description: Internal server error
     """
     try:
         data = request.get_json()
@@ -493,22 +996,89 @@ def create_employee():
 def update_employee(employee_id):
     """
     Update an employee
+    Modify an existing employee's details.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - name: employee_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the employee to update
       - in: body
         name: body
         required: true
+        description: Fields to update (all fields optional)
         schema:
           type: object
+          properties:
+            employee_name:
+              type: string
+              description: Updated full name
+              example: John D. Smith
+            email:
+              type: string
+              description: Updated email address
+              example: john.d.smith@company.com
+            mobile:
+              type: string
+              description: Updated mobile number
+              example: "9876543211"
+            department:
+              type: string
+              description: Updated department
+              example: Product
+            designation:
+              type: string
+              description: Updated designation
+              example: Senior Engineer
+            status:
+              type: string
+              description: Updated status
+              enum: [Active, Inactive]
+              example: Active
     responses:
       200:
-        description: Employee updated
+        description: Employee updated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Employee updated successfully
+            data:
+              type: object
+              properties:
+                employee_id:
+                  type: integer
+                  example: 1
+                employee_name:
+                  type: string
+                  example: John D. Smith
+                email:
+                  type: string
+                  example: john.d.smith@company.com
+                status:
+                  type: string
+                  example: Active
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      404:
+        description: Employee not found
+      409:
+        description: Email already exists
+      500:
+        description: Internal server error
     """
     try:
         employee = Employee.query.get(employee_id)
@@ -547,17 +1117,41 @@ def update_employee(employee_id):
 def delete_employee(employee_id):
     """
     Delete an employee
+    Permanently remove an employee and all associated attendance records.
     ---
     tags:
       - Employees
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: employee_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the employee to delete
     responses:
       200:
-        description: Employee deleted
+        description: Employee deleted successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Employee deleted successfully
+            data:
+              type: string
+              example: null
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      404:
+        description: Employee not found
+      500:
+        description: Internal server error
     """
     try:
         employee = Employee.query.get(employee_id)
@@ -579,32 +1173,93 @@ def delete_employee(employee_id):
 @jwt_required()
 def get_attendance():
     """
-    Get attendance records (with optional filters)
+    Get attendance records
+    Retrieve attendance records with optional filters by employee, date, status, department, or search.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: employee_id
         in: query
         type: integer
+        required: false
+        description: Filter by employee ID
       - name: date
         in: query
         type: string
-        description: "Format: YYYY-MM-DD"
+        required: false
+        description: "Filter by date (Format: YYYY-MM-DD)"
+        example: "2025-01-15"
       - name: status
         in: query
         type: string
+        required: false
+        description: Filter by attendance status
         enum: [Present, Absent, Late, Half Day, On Leave]
       - name: department
         in: query
         type: string
+        required: false
+        description: Filter by department name
       - name: search
         in: query
         type: string
+        required: false
         description: Search by employee name
     responses:
       200:
         description: List of attendance records
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  attendance_id:
+                    type: integer
+                    example: 1
+                  employee_id:
+                    type: integer
+                    example: 5
+                  employee_name:
+                    type: string
+                    example: John Smith
+                  department:
+                    type: string
+                    example: Engineering
+                  attendance_date:
+                    type: string
+                    example: "2025-01-15"
+                  check_in_time:
+                    type: string
+                    example: "09:00:00"
+                  check_out_time:
+                    type: string
+                    example: "18:00:00"
+                  attendance_status:
+                    type: string
+                    example: Present
+                  created_at:
+                    type: string
+                    example: "2025-01-15T09:00:00"
+      400:
+        description: Invalid date format
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
     """
     try:
         query = Attendance.query.join(Employee)
@@ -635,26 +1290,93 @@ def get_attendance():
 @jwt_required()
 def attendance_employee_summary():
     """
-    Per-employee attendance summary with percentage
+    Per-employee attendance summary
+    Get attendance summary with percentage for each employee.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: department
         in: query
         type: string
+        required: false
+        description: Filter by department
       - name: search
         in: query
         type: string
+        required: false
+        description: Search by employee name
       - name: min_percentage
         in: query
         type: number
+        required: false
+        description: Minimum attendance percentage filter
       - name: max_percentage
         in: query
         type: number
+        required: false
+        description: Maximum attendance percentage filter
     responses:
       200:
         description: Employee attendance summaries
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: array
+              items:
+                type: object
+                properties:
+                  employee_id:
+                    type: integer
+                    example: 1
+                  employee_name:
+                    type: string
+                    example: John Smith
+                  department:
+                    type: string
+                    example: Engineering
+                  designation:
+                    type: string
+                    example: Software Engineer
+                  status:
+                    type: string
+                    example: Active
+                  total_records:
+                    type: integer
+                    example: 30
+                  present:
+                    type: integer
+                    example: 22
+                  late:
+                    type: integer
+                    example: 3
+                  half_day:
+                    type: integer
+                    example: 1
+                  absent:
+                    type: integer
+                    example: 2
+                  on_leave:
+                    type: integer
+                    example: 2
+                  attendance_percentage:
+                    type: number
+                    example: 91.07
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
     """
     try:
         search      = request.args.get("search", "").strip()
@@ -675,6 +1397,10 @@ def attendance_employee_summary():
             absent   = sum(1 for r in records if r.attendance_status == "Absent")
             on_leave = sum(1 for r in records if r.attendance_status == "On Leave")
 
+            present_weight = present + late + (half_day * 0.5)
+            denominator    = total - on_leave
+            attendance_percentage = round((present_weight / denominator * 100), 2) if denominator > 0 else 0
+
             summary.append({
                 "employee_id": emp.employee_id,
                 "employee_name": emp.employee_name,
@@ -686,7 +1412,8 @@ def attendance_employee_summary():
                 "late": late,
                 "half_day": half_day,
                 "absent": absent,
-                "on_leave": on_leave
+                "on_leave": on_leave,
+                "attendance_percentage": attendance_percentage
             })
 
         return success_response(summary)
@@ -698,20 +1425,69 @@ def attendance_employee_summary():
 @jwt_required()
 def get_attendance_record(attendance_id):
     """
-    Get a single attendance record by ID
+    Get a single attendance record
+    Retrieve details of a specific attendance record by its ID.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: attendance_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the attendance record
     responses:
       200:
         description: Attendance record found
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Success
+            data:
+              type: object
+              properties:
+                attendance_id:
+                  type: integer
+                  example: 1
+                employee_id:
+                  type: integer
+                  example: 5
+                employee_name:
+                  type: string
+                  example: John Smith
+                department:
+                  type: string
+                  example: Engineering
+                attendance_date:
+                  type: string
+                  example: "2025-01-15"
+                check_in_time:
+                  type: string
+                  example: "09:00:00"
+                check_out_time:
+                  type: string
+                  example: "18:00:00"
+                attendance_status:
+                  type: string
+                  example: Present
+                created_at:
+                  type: string
+                  example: "2025-01-15T09:00:00"
+      401:
+        description: Unauthorized — missing or invalid JWT token
       404:
-        description: Not found
+        description: Attendance record not found
+      500:
+        description: Internal server error
     """
     try:
         record = Attendance.query.get(attendance_id)
@@ -727,36 +1503,95 @@ def get_attendance_record(attendance_id):
 def mark_attendance():
     """
     Mark attendance for an employee
+    Create a new attendance record. Cannot mark attendance for future dates or duplicate dates.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - in: body
         name: body
         required: true
+        description: Attendance data
         schema:
           type: object
-          required: [employee_id, attendance_date, attendance_status]
+          required:
+            - employee_id
+            - attendance_date
+            - attendance_status
           properties:
             employee_id:
               type: integer
+              description: ID of the employee
+              example: 5
             attendance_date:
               type: string
-              description: "Format: YYYY-MM-DD"
+              description: "Date of attendance (Format: YYYY-MM-DD). Cannot be a future date."
+              example: "2025-01-15"
             attendance_status:
               type: string
+              description: Attendance status
               enum: [Present, Absent, Late, Half Day, On Leave]
+              example: Present
             check_in_time:
               type: string
-              description: "Format: HH:MM:SS"
+              description: "Check-in time (Format: HH:MM:SS)"
+              example: "09:00:00"
             check_out_time:
               type: string
-              description: "Format: HH:MM:SS"
+              description: "Check-out time (Format: HH:MM:SS)"
+              example: "18:00:00"
     responses:
       201:
-        description: Attendance marked
+        description: Attendance marked successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Attendance marked successfully
+            data:
+              type: object
+              properties:
+                attendance_id:
+                  type: integer
+                  example: 15
+                employee_id:
+                  type: integer
+                  example: 5
+                employee_name:
+                  type: string
+                  example: John Smith
+                attendance_date:
+                  type: string
+                  example: "2025-01-15"
+                attendance_status:
+                  type: string
+                  example: Present
+                check_in_time:
+                  type: string
+                  example: "09:00:00"
+                check_out_time:
+                  type: string
+                  example: "18:00:00"
+      400:
+        description: Validation error — missing fields, future date, or invalid format
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      404:
+        description: Employee not found
       409:
-        description: Already marked for this date
+        description: Attendance already marked for this employee on this date
+      500:
+        description: Internal server error
     """
     try:
         data = request.get_json()
@@ -776,6 +1611,9 @@ def mark_attendance():
             return error_response("Employee not found", 404)
 
         rec_date = datetime.strptime(data["attendance_date"], "%Y-%m-%d").date()
+        if rec_date > date.today():
+            return error_response("Cannot mark attendance for a future date", 400)
+
 
         existing = Attendance.query.filter_by(
             employee_id=data["employee_id"],
@@ -813,22 +1651,87 @@ def mark_attendance():
 def update_attendance(attendance_id):
     """
     Update an attendance record
+    Modify an existing attendance record. Cannot update to a future date.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    consumes:
+      - application/json
+    produces:
+      - application/json
     parameters:
       - name: attendance_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the attendance record to update
       - in: body
         name: body
         required: true
+        description: Fields to update (all fields optional)
         schema:
           type: object
+          properties:
+            attendance_status:
+              type: string
+              description: Updated attendance status
+              enum: [Present, Absent, Late, Half Day, On Leave]
+              example: Late
+            attendance_date:
+              type: string
+              description: "Updated date (Format: YYYY-MM-DD). Cannot be a future date."
+              example: "2025-01-15"
+            check_in_time:
+              type: string
+              description: "Updated check-in time (Format: HH:MM:SS). Send null to clear."
+              example: "09:15:00"
+            check_out_time:
+              type: string
+              description: "Updated check-out time (Format: HH:MM:SS). Send null to clear."
+              example: "18:00:00"
     responses:
       200:
-        description: Attendance updated
+        description: Attendance updated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Attendance updated successfully
+            data:
+              type: object
+              properties:
+                attendance_id:
+                  type: integer
+                  example: 1
+                employee_id:
+                  type: integer
+                  example: 5
+                attendance_date:
+                  type: string
+                  example: "2025-01-15"
+                attendance_status:
+                  type: string
+                  example: Late
+                check_in_time:
+                  type: string
+                  example: "09:15:00"
+                check_out_time:
+                  type: string
+                  example: "18:00:00"
+      400:
+        description: Validation error — invalid format or future date
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      404:
+        description: Attendance record not found
+      500:
+        description: Internal server error
     """
     try:
         record = Attendance.query.get(attendance_id)
@@ -850,7 +1753,10 @@ def update_attendance(attendance_id):
         if "check_out_time" in data:
             record.check_out_time = datetime.strptime(data["check_out_time"], "%H:%M:%S").time() if data["check_out_time"] else None
         if "attendance_date" in data:
-            record.attendance_date = datetime.strptime(data["attendance_date"], "%Y-%m-%d").date()
+            upd_date = datetime.strptime(data["attendance_date"], "%Y-%m-%d").date()
+            if upd_date > date.today():
+                return error_response("Cannot mark attendance for a future date", 400)
+            record.attendance_date = upd_date
 
         db.session.commit()
         return success_response(record.to_dict(), "Attendance updated successfully")
@@ -866,17 +1772,41 @@ def update_attendance(attendance_id):
 def delete_attendance(attendance_id):
     """
     Delete an attendance record
+    Permanently remove an attendance record.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: attendance_id
         in: path
         type: integer
         required: true
+        description: Unique identifier of the attendance record to delete
     responses:
       200:
-        description: Attendance deleted
+        description: Attendance record deleted successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Attendance record deleted successfully
+            data:
+              type: string
+              example: null
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      404:
+        description: Attendance record not found
+      500:
+        description: Internal server error
     """
     try:
         record = Attendance.query.get(attendance_id)
@@ -898,27 +1828,81 @@ def delete_attendance(attendance_id):
 @jwt_required()
 def attendance_report():
     """
-    Generate attendance statistics (summary report)
+    Generate attendance statistics report
+    Get aggregated attendance statistics with optional filters by employee, month, year, or department.
     ---
     tags:
       - Attendance
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     parameters:
       - name: employee_id
         in: query
         type: integer
+        required: false
+        description: Filter by employee ID
       - name: month
         in: query
         type: integer
-        description: "Month number 1-12"
+        required: false
+        description: "Filter by month (1-12)"
+        example: 1
       - name: year
         in: query
         type: integer
+        required: false
+        description: Filter by year
+        example: 2025
       - name: department
         in: query
         type: string
+        required: false
+        description: Filter by department name
     responses:
       200:
-        description: Attendance statistics
+        description: Attendance statistics generated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Attendance stats report generated successfully
+            data:
+              type: object
+              properties:
+                total_records:
+                  type: integer
+                  example: 150
+                status_counts:
+                  type: object
+                  properties:
+                    Present:
+                      type: integer
+                      example: 100
+                    Absent:
+                      type: integer
+                      example: 15
+                    Late:
+                      type: integer
+                      example: 20
+                    Half Day:
+                      type: integer
+                      example: 5
+                    On Leave:
+                      type: integer
+                      example: 10
+                attendance_percentage:
+                  type: number
+                  example: 87.86
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
     """
     try:
         query = Attendance.query.join(Employee)
@@ -969,13 +1953,85 @@ def attendance_report():
 @jwt_required()
 def get_dashboard_stats():
     """
-    Get overall HR dashboard statistics
+    Get dashboard statistics
+    Retrieve overall HR dashboard statistics including employee totals, today's attendance, department breakdown, and 7-day trend data.
     ---
     tags:
       - Dashboard
+    security:
+      - Bearer: []
+    produces:
+      - application/json
     responses:
       200:
-        description: Dashboard statistics including totals, trends, and department data
+        description: Dashboard statistics generated successfully
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+              example: true
+            message:
+              type: string
+              example: Dashboard statistics generated successfully
+            data:
+              type: object
+              properties:
+                total_employees:
+                  type: integer
+                  description: Total number of employees
+                  example: 50
+                active_employees:
+                  type: integer
+                  description: Number of active employees
+                  example: 45
+                present_today:
+                  type: integer
+                  description: Employees present today (including half-day)
+                  example: 38
+                absent_today:
+                  type: integer
+                  description: Employees absent today
+                  example: 5
+                leave_today:
+                  type: integer
+                  description: Employees on leave today
+                  example: 2
+                attendance_percentage_today:
+                  type: number
+                  description: Today's attendance percentage
+                  example: 88.37
+                department_data:
+                  type: array
+                  description: Employee count per department
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                        example: Engineering
+                      value:
+                        type: integer
+                        example: 15
+                trend_data:
+                  type: array
+                  description: Last 7 days attendance trend
+                  items:
+                    type: object
+                    properties:
+                      date:
+                        type: string
+                        example: "01/15"
+                      Present:
+                        type: integer
+                        example: 40
+                      Absent:
+                        type: integer
+                        example: 5
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
     """
     try:
         today = date.today()

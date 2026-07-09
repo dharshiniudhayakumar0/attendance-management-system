@@ -62,7 +62,7 @@ export default function Dashboard() {
         ) : stats ? (
           <>
             {/* Stats Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
               {/* Card 1 */}
               <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden group hover:border-slate-700 transition-all shadow-lg">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Employees</span>
@@ -89,13 +89,6 @@ export default function Dashboard() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Absent Today</span>
                 <p className="text-3xl font-extrabold text-red-400 mt-4">{stats.absent_today}</p>
                 <div className="text-xs text-slate-400 mt-1">Unexcused absence</div>
-              </div>
-
-              {/* Card 5 */}
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden group hover:border-slate-700 transition-all shadow-lg bg-gradient-to-tr from-indigo-950/10 to-violet-950/10">
-                <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Attendance Rate</span>
-                <p className="text-3xl font-extrabold text-indigo-300 mt-4">{stats.attendance_percentage_today}%</p>
-                <div className="text-xs text-slate-400 mt-1">Daily rate</div>
               </div>
             </div>
 

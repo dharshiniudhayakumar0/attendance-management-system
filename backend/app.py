@@ -8,38 +8,94 @@ from config import config_by_name
 from models import db
 from routes import api
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  SWAGGER / FLASGGER — Template & Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
 SWAGGER_TEMPLATE = {
     "swagger": "2.0",
     "info": {
         "title": "Attendance Management System API",
-        "description": "REST API for managing employees, attendance, and dashboard statistics.",
-        "version": "1.0.0",
-        "contact": {"name": "AMS Team"}
+        "description": (
+            "REST APIs for Employee Attendance Management System.\n\n"
+            "This API provides endpoints for managing employees, recording "
+            "attendance, generating reports, and viewing dashboard statistics.\n\n"
+            "**Authentication:** Most endpoints require a valid JWT Bearer token. "
+            "Use the `/login` endpoint to obtain a token, then click the "
+            "**Authorize** button above and enter: `Bearer <your_token>`"
+        ),
+        "version": "1.0",
+        "contact": {
+            "name": "Dharshini U",
+            "email": "dharshini@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        }
     },
+    "host": "127.0.0.1:5000",
+    "basePath": "/",
+    "schemes": ["http", "https"],
     "securityDefinitions": {
         "Bearer": {
             "type": "apiKey",
             "name": "Authorization",
             "in": "header",
-            "description": "JWT token — format: **Bearer &lt;token&gt;**"
+            "description": (
+                "JWT Authorization header using the Bearer scheme.\n\n"
+                "Enter your token in the format: **Bearer &lt;JWT_TOKEN&gt;**\n\n"
+                "Example: `Bearer eyJhbGciOiJIUzI1NiIs...`"
+            )
         }
     },
     "security": [{"Bearer": []}],
-    "basePath": "/",
-    "schemes": ["http", "https"]
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "User login, token generation, and token refresh endpoints"
+        },
+        {
+            "name": "Users",
+            "description": "User account management (admin only)"
+        },
+        {
+            "name": "Employees",
+            "description": "Employee CRUD operations and search"
+        },
+        {
+            "name": "Attendance",
+            "description": "Attendance marking, tracking, reports, and summaries"
+        },
+        {
+            "name": "Dashboard",
+            "description": "Dashboard statistics and analytics data"
+        }
+    ]
 }
 
 SWAGGER_CONFIG = {
     "headers": [],
-    "specs": [{"endpoint": "apispec", "route": "/apispec.json", "rule_filter": lambda rule: True, "model_filter": lambda tag: True}],
+    "specs": [
+        {
+            "endpoint": "apispec",
+            "route": "/apispec.json",
+            "rule_filter": lambda rule: True,
+            "model_filter": lambda tag: True
+        }
+    ],
     "static_url_path": "/flasgger_static",
     "swagger_ui": True,
     "specs_route": "/apidocs/"
 }
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+#  APPLICATION FACTORY
+# ═══════════════════════════════════════════════════════════════════════════════
+
 def create_app(config_name=None):
-    """Application factory."""
+    """Application factory — creates and configures the Flask app."""
 
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
@@ -47,16 +103,18 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config_by_name.get(config_name, config_by_name["default"]))
 
-    # Initialise extensions
+    # ── Initialise extensions ──────────────────────────────────────────────
     CORS(app, resources={r"/*": {"origins": "*"}})
     db.init_app(app)
     JWTManager(app)
+
+    # Swagger UI — available at http://127.0.0.1:5000/apidocs/
     Swagger(app, template=SWAGGER_TEMPLATE, config=SWAGGER_CONFIG)
 
-    # Register blueprints
+    # ── Register blueprints ────────────────────────────────────────────────
     app.register_blueprint(api)
 
-    # Create tables if they don't exist
+    # ── Create tables if they don't exist ──────────────────────────────────
     with app.app_context():
         db.create_all()
 
@@ -74,33 +132,104 @@ def create_app(config_name=None):
     def internal_error(error):
         return jsonify({"success": False, "message": "Internal server error", "data": None}), 500
 
-    # ── JWT Auth Login endpoint ─────────────────────────────────────────────
+    # ══════════════════════════════════════════════════════════════════════════
+    #  AUTHENTICATION ENDPOINTS (defined on the app, not the blueprint)
+    # ══════════════════════════════════════════════════════════════════════════
 
     @app.route("/login", methods=["POST"])
     def root_login():
         """
         User Login
+        Authenticate with username and password to receive JWT tokens.
         ---
         tags:
           - Authentication
+        consumes:
+          - application/json
+        produces:
+          - application/json
         parameters:
           - in: body
             name: body
             required: true
+            description: Login credentials
             schema:
               type: object
+              required:
+                - username
+                - password
               properties:
                 username:
                   type: string
+                  description: The user's username
                   example: admin
                 password:
                   type: string
+                  description: The user's password
                   example: admin123
         responses:
           200:
-            description: Login successful — returns JWT access token + user info
+            description: Login successful — returns JWT access & refresh tokens
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Login successful
+                data:
+                  type: object
+                  properties:
+                    access_token:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    refresh_token:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    user:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 0
+                        username:
+                          type: string
+                          example: admin
+                        role:
+                          type: string
+                          example: admin
+          400:
+            description: Missing username or password
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: Username and password are required
+                data:
+                  type: string
+                  example: null
           401:
             description: Invalid credentials
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: Invalid username or password
+                data:
+                  type: string
+                  example: null
+          500:
+            description: Internal server error
         """
         from flask import request
         from flask_jwt_extended import create_access_token, create_refresh_token
@@ -148,12 +277,54 @@ def create_app(config_name=None):
     def refresh_token():
         """
         Refresh JWT Access Token
+        Use a valid refresh token to obtain a new access token.
         ---
         tags:
           - Authentication
+        consumes:
+          - application/json
+        produces:
+          - application/json
+        security:
+          - Bearer: []
+        parameters:
+          - in: header
+            name: Authorization
+            type: string
+            required: true
+            description: "Refresh token in format: Bearer <refresh_token>"
         responses:
           200:
-            description: New access token issued
+            description: New access token issued successfully
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: true
+                message:
+                  type: string
+                  example: Token refreshed
+                data:
+                  type: object
+                  properties:
+                    access_token:
+                      type: string
+                      example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+          401:
+            description: Missing or invalid refresh token
+            schema:
+              type: object
+              properties:
+                success:
+                  type: boolean
+                  example: false
+                message:
+                  type: string
+                  example: Missing refresh token
+                data:
+                  type: string
+                  example: null
         """
         from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt, create_access_token
         # This endpoint uses the refresh token — handled manually
@@ -173,6 +344,10 @@ def create_app(config_name=None):
 
     return app
 
+
+# ═══════════════════════════════════════════════════════════════════════════════
+#  RUN THE APPLICATION
+# ═══════════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     app = create_app()
