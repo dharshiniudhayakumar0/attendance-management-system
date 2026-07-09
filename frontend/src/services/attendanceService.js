@@ -77,3 +77,21 @@ export const getAttendanceEmployeeSummary = async (filters = {}) => {
     throw new Error(error.response?.data?.message || "Failed to fetch attendance summary.");
   }
 };
+
+export const exportAttendanceCsv = async (filters = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (filters.employee_id) params.append("employee_id", filters.employee_id);
+    if (filters.date) params.append("date", filters.date);
+    if (filters.status) params.append("status", filters.status);
+    if (filters.search) params.append("search", filters.search);
+
+    const response = await api.get(`${API_BASE}/export?${params.toString()}`, {
+      responseType: "blob",
+    });
+    return response.data; // Blob
+  } catch (error) {
+    throw new Error("Failed to export attendance CSV.");
+  }
+};
+

@@ -7,6 +7,7 @@ import {
   updateAttendance,
   deleteAttendance,
   getAttendanceReport,
+  exportAttendanceCsv,
 } from "../services/attendanceService";
 
 // ─── Sort Icon ────────────────────────────────────────────────────────────────
@@ -190,6 +191,22 @@ export default function Attendance() {
     } catch (err) { triggerError(err.message || "Failed to delete record."); }
   };
 
+  const handleExportCsv = async () => {
+    try {
+      const blob = await exportAttendanceCsv(filters);
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `attendance_report_${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      triggerSuccess("CSV exported successfully!");
+    } catch (err) {
+      triggerError(err.message || "Failed to export CSV.");
+    }
+  };
+
   const handleFilterChange = (e) =>
     setFilters({ ...filters, [e.target.name]: e.target.value });
 
@@ -233,6 +250,15 @@ export default function Attendance() {
             </p>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl px-5 py-3 text-sm font-semibold transition-all border border-slate-700/50 active:scale-[0.98]"
+            >
+              <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Export CSV
+            </button>
             <button
               onClick={openMarkModal}
               id="btn-mark-attendance"

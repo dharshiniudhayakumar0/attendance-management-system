@@ -1820,6 +1820,103 @@ def delete_attendance(attendance_id):
         return error_response(str(e), 500)
 
 
+@api.route("/attendance/export", methods=["GET"])
+@jwt_required()
+def export_attendance_csv():
+    """
+    Export attendance records to CSV
+    Download filtered attendance logs as a downloadable CSV file.
+    ---
+    tags:
+      - Attendance
+    security:
+      - Bearer: []
+    produces:
+      - text/csv
+    parameters:
+      - name: employee_id
+        in: query
+        type: integer
+        required: false
+        description: Filter export by specific employee ID
+      - name: date
+        in: query
+        type: string
+        required: false
+        description: "Filter export by date (Format: YYYY-MM-DD)"
+        example: "2025-01-15"
+      - name: status
+        in: query
+        type: string
+        required: false
+        description: Filter export by attendance status
+        enum: [Present, Absent, Late, Half Day, On Leave]
+      - name: search
+        in: query
+        type: string
+        required: false
+        description: Search/filter by employee name
+    responses:
+      200:
+        description: A CSV file containing attendance logs matching active filters
+        headers:
+          Content-Disposition:
+            type: string
+            description: attachment; filename=attendance_report.csv
+      401:
+        description: Unauthorized — missing or invalid JWT token
+      500:
+        description: Internal server error
+    """
+    import csv
+    import io
+    from flask import Response
+    try:
+        query = Attendance.query.join(Employee)
+
+        employee_id     = request.args.get("employee_id", type=int)
+        attendance_date = request.args.get("date")
+        status          = request.args.get("status")
+        search          = request.args.get("search", "").strip()
+
+        if employee_id:
+            query = query.filter(Attendance.employee_id == employee_id)
+        if attendance_date:
+            query = query.filter(Attendance.attendance_date == datetime.strptime(attendance_date, "%Y-%m-%d").date())
+        if status:
+            query = query.filter(Attendance.attendance_status == status)
+        if search:
+            query = query.filter(Employee.employee_name.ilike(f"%{search}%"))
+
+        records = query.order_by(Attendance.attendance_date.desc(), Employee.employee_name).all()
+
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        writer.writerow(["Attendance ID", "Employee ID", "Employee Name", "Department", "Date", "Check-In Time", "Check-Out Time", "Status"])
+        
+        for r in records:
+            writer.writerow([
+                r.attendance_id,
+                r.employee_id,
+                r.employee.employee_name if r.employee else "",
+                r.employee.department if r.employee else "",
+                r.attendance_date.strftime("%Y-%m-%d"),
+                r.check_in_time.strftime("%H:%M:%S") if r.check_in_time else "",
+                r.check_out_time.strftime("%H:%M:%S") if r.check_out_time else "",
+                r.attendance_status
+            ])
+            
+        output.seek(0)
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-disposition": "attachment; filename=attendance_report.csv"}
+        )
+    except Exception as e:
+        return error_response(str(e), 500)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  ATTENDANCE REPORT
 # ═══════════════════════════════════════════════════════════════════════════
